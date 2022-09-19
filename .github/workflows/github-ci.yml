@@ -1,0 +1,104 @@
+name: Deploy Vulnerable Application Final 2                               # workflow name
+
+on:
+  push:
+    branches:
+      - master
+jobs:
+  
+  sonar:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: 1.15
+
+    - name: Build
+      run: go build -v ./...
+
+    - name: Test
+      run: go test -json -coverprofile=cover.out ./... > result.json
+
+    - name: SonarCloud Scan
+      uses: SonarSource/sonarcloud-github-action@master
+      env:
+        GITHUB_TOKEN: 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
+        SONAR_TOKEN: 5d409efa65abfafec85ce7d87c33f5b7630f9191
+  
+  snyk:
+    permissions:
+      contents: read # for actions/checkout to fetch code
+      security-events: write # for github/codeql-action/upload-sarif to upload SARIF results
+      actions: read # only required for a private repository by github/codeql-action/upload-sarif to get the Action run status 
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Build a Docker image
+      run: docker build -t your/image-to-test .
+    - name: Run Snyk to check Docker image for vulnerabilities
+      # Snyk can be used to break the build when it detects vulnerabilities.
+      # In this case we want to upload the issues to GitHub Code Scanning
+      continue-on-error: true
+      uses: snyk/actions/docker@14818c4695ecc4045f33c9cee9e795a788711ca4
+      env:
+        # In order to use the Snyk Action you will need to have a Snyk API token.
+        # More details in https://github.com/snyk/actions#getting-your-snyk-token
+        # or you can signup for free at https://snyk.io/login
+        SNYK_TOKEN: 23e549ca-8cdc-4852-908e-e1dc8da72508
+      with:
+        image: your/image-to-test
+        args: --file=Dockerfile
+
+  
+  deploy-heroku:
+    name: Deploy Heroku
+    runs-on: ubuntu-latest
+    needs: [sonar, snyk]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: akhileshns/heroku-deploy@v3.12.12 # This is the action
+        with:
+          heroku_api_key: 941c09ca-a7be-4ce1-85d5-aa9d978358ec
+          heroku_app_name: "mtejera-vulnerableapp" #Must be unique in Heroku
+          heroku_email: "mariano.garciatejera@gmail.com"
+          remote_branch: "master"
+          usedocker: true
+
+soos:
+    permissions:
+      security-events: write # for uploading code scanning alert info
+      actions: read # only required for a private repository by github/codeql-action/upload-sarif to get the Action run status 
+    name: SOOS DAST Scan
+    runs-on: ubuntu-latest
+    needs: deploy-heroku
+    steps:
+      - name: Run SOOS DAST Scan
+        uses: soos-io/soos-dast-github-action@b524e2cfbc4f4a5733153a7e624f569913f6c6e9
+        with:
+          client_id: lziyh8tgh
+          api_key: ZDg4ZGRkMDUtZDAwZS00MDhmLWIxZGMtZWRhMmUyMzA5MGVl
+          project_name: "vulnerable-web-app"
+          scan_mode: "baseline"
+          target_url: "https://mtejera-vulnerableapp.herokuapp.com/"
+          output_format: "sarif"
+      - name: Upload SOOS DAST SARIF Report
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: results.sarif
+Footer
+© 2022 GitHub, Inc.
+Footer navigation
+Terms
+Privacy
+Security
+Status
+Docs
+Contact GitHub
+Pricing
+API
+Training
+Blog
+About
