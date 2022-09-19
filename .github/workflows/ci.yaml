@@ -7,24 +7,18 @@ on:
 jobs:
   
   sonar:
+    name: SonarCloud
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-
-    - name: Set up Go
-      uses: actions/setup-go@v2
-      with:
-        go-version: 1.15
-
-    - name: Build
-      run: go build -v ./...
-
-
-    - name: SonarCloud Scan
-      uses: SonarSource/sonarcloud-github-action@master
-      env:
-        GITHUB_TOKEN: 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
-        SONAR_TOKEN: 5d409efa65abfafec85ce7d87c33f5b7630f9191
+      - uses: actions/checkout@v2
+        with:
+          # Shallow clones should be disabled for a better relevancy of analysis
+          fetch-depth: 0
+      - name: Scan
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: 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
+          SONAR_TOKEN: 5d409efa65abfafec85ce7d87c33f5b7630f9191
   
   snyk:
     permissions:
