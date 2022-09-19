@@ -1,13 +1,3 @@
 sonar.organization=el-pollo-6
-sonar.projectKey=vulnerable-web-app
+sonar.projectKey=El-Pollo-6_vulnerable-web-app
 sonar.projectName=vulnerable-web-app
-
-sonar.sources=.
-sonar.exclusions=**/*_test.go,**/vendor/**
-sonar.tests=.
-sonar.test.inclusions=**/*_test.go
-sonar.test.exclusions=**/vendor/**
-
-sonar.sourceEncoding=UTF-8
-sonar.go.coverage.reportPaths=cover.out
-sonar.go.tests.reportPaths=result.json
