@@ -1,1 +1,3 @@
+sonar.organization=el-pollo-6
 sonar.projectKey=vulnerable-web-app
+sonar.projectName=vulnerable-web-app
